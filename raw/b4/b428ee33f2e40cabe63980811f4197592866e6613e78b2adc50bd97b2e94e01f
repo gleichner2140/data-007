@@ -1,0 +1,131 @@
+
+
+方法：
+1、运行机制和原理
+2、动手：安装配置
+3、写程序
+
+
+Hive: 基于HDFS之上的数据仓库
+=======================================
+一、什么是数据仓库?
+	1、其实就是一个数据库（Oracle、MySQL等等）
+	2、比较大，数据多
+	3、一般select
+
+二、什么是Hive？（蜂巢）
+	1、是基于HDFS之上的数据仓库
+			Hive        HDFS
+			表  ---->   目录
+			数据 --->   文件
+			分区 --->   目录
+			
+	2、是一个翻译器:  SQL ---> Hive ---> MapReduce
+	    举例：  select ---> hive  ---> MapReduce程序
+
+三、Hive的体系结构和安装配置
+	1、Hive的体系结构
+	2、Hive的元信息：表名、列名、列的类型 *****
+	3、安装配置（简单一点）
+		（*）安装模式：嵌入模式、本地模式、远程模式
+		（*）嵌入模式：
+			（1）不需要MySQL
+			（2）自带Derby数据存储元信息
+			（3）特点：只支持一个连接
+			
+		（*）本地模式、远程模式
+			（1）MySQL数据库
+			（2）生产：远程模式
+			
+	核心的配置文件：/root/training/apache-hive-2.3.0-bin/conf/hive-site.xml
+		<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+		<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+		<configuration>
+				<property>
+				  <name>javax.jdo.option.ConnectionURL</name>
+				  <value>jdbc:mysql://localhost:3306/hive?useSSL=false</value>
+				</property>
+
+				<property>
+				  <name>javax.jdo.option.ConnectionDriverName</name>
+				  <value>com.mysql.jdbc.Driver</value>
+				</property>
+
+				<property>
+				  <name>javax.jdo.option.ConnectionUserName</name>
+				  <value>hiveowner</value>
+				</property>
+
+				<property>
+				  <name>javax.jdo.option.ConnectionPassword</name>
+				  <value>Welcome_1</value>
+				</property>
+		</configuration>
+
+	注意：
+		Hive-on-MR： 过期了
+		Hive-on-Spark: 不成熟，还在开发阶段
+		Hive-on-MR is deprecated in Hive 2 and may not be available in the future versions. Consider using a different execution engine (i.e. spark, tez) or using Hive 1.X releases.	
+	
+四、Hive的数据模型：表（重要）
+	注意：Hive中，数据默认的分隔符是 tab键
+
+	1、内部表：类似MySQL中表
+		hive> create table newemp
+			> (empno int,
+			>  ename string,
+			>  job string,
+			>  mgr int,
+			>  hiredate string,
+			>  sal int,
+			>  comm int,
+			>  deptno int
+			> )row format delimited fields terminated by ',';
+	
+		导入数据: load 
+		本地数据：load data local inpath '/root/temp/emp.csv' into table newemp;
+		HDFS：    load data inpath '/HDFS的目录/emp.csv' into table newemp;
+	
+	2、分区表:
+		hive> create table emp_part
+			> (empno int,
+			>  ename string,
+			>  job string,
+			>  mgr int,
+			>  hiredate string,
+			>  sal int,
+			>  comm int
+			> )partitioned by (deptno int)
+			> row format delimited fields terminated by ',';	
+	
+	3、桶表
+	4、外部表
+	
+	5、视图:
+		（*）视图是一个虚表
+		（*）简化复杂的查询
+			hive> create view newview10
+				> as
+				> select * from newemp where deptno=10;
+			hive> select * from newview10;
+			7782    CLARK   MANAGER 7839    1981/6/9        2450    NULL    10
+			7839    KING    PRESIDENT       NULL    1981/11/17      5000    NULL    10
+			7934    MILLER  CLERK   7782    1982/1/23       1300    NULL    10
+
+
+五、使用JDBC操作Hive
+	1、JDBC：操作RDBMS的标准接口
+
+
+
+
+
+
+
+
+
+
+
+
+
+
