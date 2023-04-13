@@ -1,0 +1,926 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "id": "179E3C64C6D247D2866F1CE7E776D441",
+    "scrolled": false
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from sklearn import metrics\n",
+    "from tqdm import tqdm\n",
+    "import warnings\n",
+    "warnings.filterwarnings('ignore')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 获取数据"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "register = pd.read_csv('user_register_log.txt', sep='\\t', header=None,\n",
+    "           names=['user_id','register_day','register_type','device_type'],\n",
+    "           dtype={0: np.uint32, 1: np.uint8, 2: np.uint8, 3: np.uint16})\n",
+    "\n",
+    "launch = pd.read_csv('app_launch_log.txt', sep='\\t', header=None,\n",
+    "         names=['user_id', 'launch_day'],\n",
+    "         dtype={0: np.uint32, 1: np.uint8})\n",
+    "\n",
+    "create = pd.read_csv('video_create_log.txt', sep='\\t', header=None,\n",
+    "         names=['user_id', 'create_day'],\n",
+    "         dtype={0: np.uint32, 1: np.uint8})\n",
+    "\n",
+    "activity = pd.read_csv('user_activity_log.txt', sep='\\t', header=None,\n",
+    "           names=['user_id', 'act_day', 'page', 'video_id', 'author_id', 'action_type'],\n",
+    "           dtype={0: np.uint32, 1: np.uint8, 2: np.uint8, 3: np.uint32, 4: np.uint32, 5: np.uint8})"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 滑窗法扩充训练集数据"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def split_data(data, columns, start_day, end_day):\n",
+    "    data = data[(data[columns] >= start_day) & (data[columns] <= end_day)]\n",
+    "    return data \n",
+    "\n",
+    "'''\n",
+    "下面返回的list说明下：\n",
+    "以1-18天为起始特征区间，用于返回需要划多少天\n",
+    "例如划1-18，就返回18-18=0，\n",
+    "划测试集1-30，就返回30-18=12\n",
+    "需要少划几个对应修改就好\n",
+    "... 要修改起始特征区间，修改下面的 ups 和 downs 函数\n",
+    "''' \n",
+    "def features_addday_list():\n",
+    "    return [0, 1, 2, 3, 4, 5, 12]\n",
+    "\n",
+    "def ups():\n",
+    "    return 1\n",
+    "\n",
+    "def downs():\n",
+    "    return 18"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0 19 25\n",
+      "1 20 26\n",
+      "2 21 27\n",
+      "3 22 28\n",
+      "4 23 29\n",
+      "5 24 30\n"
+     ]
+    }
+   ],
+   "source": [
+    "def get_label_list(start_day, end_day):\n",
+    "    result = split_data(launch, 'launch_day', start_day, end_day)['user_id'].drop_duplicates()\n",
+    "    return pd.Series(result)\n",
+    "\n",
+    "up = downs()+1\n",
+    "down = downs()+7\n",
+    "data = register.loc[:, ['user_id']]\n",
+    "for label_num in range(len(features_addday_list())-1):\n",
+    "    print(label_num, up + label_num, down + label_num)\n",
+    "    label_list = get_label_list(up + label_num, down + label_num)\n",
+    "    label_name = 'label_' + str(label_num)\n",
+    "    data[label_name] = data['user_id'].isin(label_list).replace({True: 1, False: 0})\n",
+    "data.to_csv('./feature/data_label.csv', index=None)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 特征提取"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### register相关特征"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      " 29%|██▊       | 2/7 [00:00<00:00, 17.42it/s]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0 1 18\n",
+      "1 1 19\n",
+      "2 1 20\n",
+      "3 1 21\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      " 86%|████████▌ | 6/7 [00:00<00:00, 16.62it/s]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "4 1 22\n",
+      "5 1 23\n",
+      "12 1 30\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "100%|██████████| 7/7 [00:00<00:00, 15.85it/s]\n"
+     ]
+    }
+   ],
+   "source": [
+    "up = ups()\n",
+    "down = downs()\n",
+    "for feature_num in tqdm(features_addday_list()):\n",
+    "\n",
+    "    # 基础变量定义\n",
+    "    feature_start = up + 0\n",
+    "    feature_end = down + feature_num\n",
+    "    print(feature_num, feature_start, feature_end)\n",
+    "\n",
+    "    '''\n",
+    "    result_data 是存放特征的结果文件\n",
+    "    feature_data 用于存放被提取的原文件\n",
+    "    *****_tmp  存放临时特征文件\n",
+    "    '''\n",
+    "    result_data = split_data(register, 'register_day', 1, feature_end)\n",
+    "    feature_data = split_data(register, 'register_day', feature_start, feature_end)\n",
+    "\n",
+    "    # 提特征(已经包含设备类型、设备类型)\n",
+    "    # 特征区间最大天数减去注册日期\n",
+    "    result_data['maxday_red_registerday'] = max(feature_data['register_day']) - feature_data['register_day']\n",
+    "    result_data = result_data.fillna(max(feature_data['register_day']))\n",
+    "    del result_data['register_day']\n",
+    "\n",
+    "    # 保存结果\n",
+    "    result_file_name = 'register_feature_'+str(feature_num)+'.csv'\n",
+    "    result_data.to_csv('./feature/'+result_file_name, index=None)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### create相关特征"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "  0%|          | 0/7 [00:00<?, ?it/s]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0 1 18\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 14%|█▍        | 1/7 [00:02<00:12,  2.02s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 1 19\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 29%|██▊       | 2/7 [00:03<00:09,  1.93s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "2 1 20\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 43%|████▎     | 3/7 [00:06<00:08,  2.04s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "3 1 21\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 57%|█████▋    | 4/7 [00:08<00:06,  2.16s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "4 1 22\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 71%|███████▏  | 5/7 [00:10<00:04,  2.24s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "5 1 23\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 86%|████████▌ | 6/7 [00:13<00:02,  2.41s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "12 1 30\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "100%|██████████| 7/7 [00:17<00:00,  2.48s/it]\n"
+     ]
+    }
+   ],
+   "source": [
+    "up = ups()\n",
+    "down = downs()\n",
+    "\n",
+    "for feature_num in tqdm(features_addday_list()):\n",
+    "    \n",
+    "    # 基础变量定义\n",
+    "    feature_start = up\n",
+    "    feature_end = down + feature_num\n",
+    "    print(feature_num, feature_start, feature_end)\n",
+    "    \n",
+    "    result_data = split_data(register, 'register_day', 1, feature_end).loc[:, ['user_id', 'register_day']]\n",
+    "    feature_data = split_data(create, 'create_day', feature_start, feature_end)\n",
+    "\n",
+    "    # 提特征\n",
+    "    # 用户创建视频计数\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='create_day',\n",
+    "                                 aggfunc='count').reset_index().rename(columns={\"create_day\": 'create_count'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data = result_data.fillna(0)\n",
+    "\n",
+    "    # 用户创建视频的 平均/最大/最小日期 与 注册日期/最大时间 的时间差\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='create_day',\n",
+    "                                 aggfunc='mean').reset_index().rename(columns={\"create_day\": 'create_mean'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data['createmean_red_register'] = result_data['create_mean'] - result_data['register_day']\n",
+    "    result_data['maxday_red_createmean'] = max(result_data['register_day']) - result_data['create_mean']\n",
+    "\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='create_day',\n",
+    "                                 aggfunc=np.max).reset_index().rename(columns={\"create_day\": 'create_max'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data['createmax_red_register'] = result_data['create_max'] - result_data['register_day']\n",
+    "    result_data['maxday_red_createmax'] = max(result_data['register_day']) - result_data['create_max']\n",
+    "\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='create_day',\n",
+    "                                 aggfunc=np.min).reset_index().rename(columns={\"create_day\": 'create_min'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data['createmin_red_register'] = result_data['create_min'] - result_data['register_day']\n",
+    "    result_data['maxday_red_createmin'] = max(result_data['register_day']) - result_data['create_min']\n",
+    "    result_data = result_data.fillna(-1)\n",
+    "\n",
+    "    # 创建最大间隔\n",
+    "    result_data['max_red_min_create'] = result_data['create_max'] - result_data['create_min']\n",
+    "\n",
+    "    # 最后一天是否有活动\n",
+    "    result_data['create_at_lastday'] = pd.Series(\n",
+    "        result_data['create_max'] == max(feature_data['create_day'])).replace({True: 1, False: 0})\n",
+    "\n",
+    "    # 均值/最大/最小 天数处理\n",
+    "    result_data['create_mean'] = max(feature_data['create_day']) - result_data['create_mean']\n",
+    "    result_data['create_max'] = max(feature_data['create_day']) - result_data['create_max']\n",
+    "    result_data['create_min'] = max(feature_data['create_day']) - result_data['create_min']\n",
+    "\n",
+    "    # 间隔的 方差/均值\n",
+    "    feature_data_tmp = feature_data.drop_duplicates(['user_id', 'create_day']).sort_values(\n",
+    "        by=['user_id', 'create_day'])\n",
+    "    feature_data_tmp['create_gap'] = np.array(feature_data_tmp['create_day']) - np.array(\n",
+    "        feature_data_tmp.tail(1).append(feature_data_tmp.head(len(feature_data_tmp) - 1))['create_day'])\n",
+    "\n",
+    "    feature_tmp = pd.pivot_table(feature_data_tmp, index='user_id', values='create_gap',\n",
+    "                                 aggfunc=(lambda a: np.average(a[1:]))).reset_index().rename(\n",
+    "        columns={\"create_gap\": 'create_gap_mean'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    feature_tmp = pd.pivot_table(feature_data_tmp, index='user_id', values='create_gap',\n",
+    "                                 aggfunc=(lambda a: np.var(a[1:]))).reset_index().rename(\n",
+    "        columns={\"create_gap\": 'create_gap_var'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data = result_data.fillna(0)\n",
+    "\n",
+    "    # 是否一直连续/连续到结束\n",
+    "    result_data['always_create'] = [1 if i == 1 else 0 for i in result_data['create_gap_mean']]\n",
+    "    tmp = (result_data['create_at_lastday'] == 1).replace({True: 1, False: 0})\n",
+    "    result_data['always_create_atlast'] = tmp * result_data['always_create']\n",
+    "    del tmp\n",
+    "\n",
+    "    # 创建日期的 方差/峰度/偏度\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='create_day',\n",
+    "                                 aggfunc=np.var).reset_index().rename(columns={\"create_day\": 'create_var'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='create_day',\n",
+    "                                 aggfunc=pd.Series.kurt).reset_index().rename(columns={\"create_day\": 'create_kurt'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='create_day',\n",
+    "                                 aggfunc=pd.Series.skew).reset_index().rename(columns={\"create_day\": 'create_skew'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data = result_data.fillna(0)\n",
+    "\n",
+    "    # 求一天最大创建数\n",
+    "    feature_data['max_create_in_oneday'] = 0\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index=['user_id', 'create_day'], values='max_create_in_oneday',\n",
+    "                                 aggfunc='count').reset_index()\n",
+    "    feature_tmp = pd.DataFrame(feature_tmp.groupby(['user_id'])['max_create_in_oneday'].max()).reset_index()\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data.fillna(0, inplace=True)\n",
+    "    del result_data['register_day']\n",
+    "\n",
+    "    # 保存结果\n",
+    "    result_file_name = 'create_feature_' + str(feature_num) + '.csv'\n",
+    "    result_data.to_csv('./feature/' + result_file_name, index=None)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### launch相关特征"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "  0%|          | 0/7 [00:00<?, ?it/s]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0 1 18\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 14%|█▍        | 1/7 [00:11<01:10, 11.80s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 1 19\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 29%|██▊       | 2/7 [00:23<00:58, 11.62s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "2 1 20\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 43%|████▎     | 3/7 [00:35<00:47, 11.94s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "3 1 21\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 57%|█████▋    | 4/7 [00:49<00:37, 12.65s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "4 1 22\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 71%|███████▏  | 5/7 [01:05<00:27, 13.76s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "5 1 23\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 86%|████████▌ | 6/7 [01:20<00:14, 14.48s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "12 1 30\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "100%|██████████| 7/7 [01:44<00:00, 14.87s/it]\n"
+     ]
+    }
+   ],
+   "source": [
+    "up = ups()\n",
+    "down = downs()\n",
+    "\n",
+    "for feature_num in tqdm(features_addday_list()):\n",
+    "\n",
+    "    # 基础变量定义\n",
+    "    feature_start = up\n",
+    "    feature_end = down + feature_num\n",
+    "    print(feature_num, feature_start, feature_end)\n",
+    "    \n",
+    "    result_data = split_data(register, 'register_day', 1, feature_end).loc[:, ['user_id', 'register_day']]\n",
+    "    feature_data = split_data(launch, 'launch_day', feature_start, feature_end)\n",
+    "\n",
+    "    # 提特征\n",
+    "    # 登录计数/登录率\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='launch_day', \n",
+    "                                 aggfunc='count').reset_index().rename(columns={\"launch_day\": 'launch_count'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    distance = (max(feature_data['launch_day']) - min(feature_data['launch_day']))\n",
+    "    result_data['launch_ratio'] = result_data['launch_count'] * 1.0 / distance\n",
+    "    result_data = result_data.fillna(0)\n",
+    "\n",
+    "    # 登录的 平均/最大/最小日期 与 注册日期/最大时间 的时间差\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='launch_day', \n",
+    "                                 aggfunc='mean').reset_index().rename(columns={\"launch_day\": 'launch_mean'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data['launchmean_red_register'] = result_data['launch_mean'] - result_data['register_day']\n",
+    "    result_data['maxday_red_launchmean'] = max(result_data['register_day']) - result_data['launch_mean']\n",
+    "\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='launch_day', \n",
+    "                                 aggfunc=np.max).reset_index().rename(columns={\"launch_day\": 'launch_max'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data['launchmax_red_register'] = result_data['launch_max'] - result_data['register_day']\n",
+    "    result_data['maxday_red_launchmax'] = max(result_data['register_day']) - result_data['launch_max']\n",
+    "\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='launch_day',\n",
+    "                                 aggfunc=np.min).reset_index().rename(columns={\"launch_day\": 'launch_min'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data['maxday_red_launchmin'] = max(result_data['register_day']) - result_data['launch_min']\n",
+    "    result_data = result_data.fillna(-1)\n",
+    "\n",
+    "    # 登录最大与最小差\n",
+    "    result_data['max_red_min_launch'] = result_data['launch_max'] - result_data['launch_min']\n",
+    "\n",
+    "    # 最后一天是否有活动\n",
+    "    result_data['launch_at_lastday'] = pd.Series(result_data['launch_max'] == max(feature_data['launch_day'])).replace({True: 1, False: 0})\n",
+    "\n",
+    "    # 均值/最大/最小 天数处理\n",
+    "    result_data['launch_mean'] = max(feature_data['launch_day']) - result_data['launch_mean']\n",
+    "    result_data['launch_max'] = max(feature_data['launch_day']) - result_data['launch_max']\n",
+    "    result_data['launch_min'] = max(feature_data['launch_day']) - result_data['launch_min']\n",
+    "\n",
+    "    # 间隔的 方差/均值/最大\n",
+    "    feature_data_tmp = feature_data.drop_duplicates(['user_id', 'launch_day']).sort_values(by=['user_id', 'launch_day'])\n",
+    "    feature_data_tmp['launch_gap'] = np.array(feature_data_tmp['launch_day']) - np.array(\n",
+    "        feature_data_tmp.tail(1).append(feature_data_tmp.head(len(feature_data_tmp) - 1))['launch_day'])\n",
+    "\n",
+    "    feature_tmp = pd.pivot_table(feature_data_tmp, index='user_id', values='launch_gap',\n",
+    "                                 aggfunc=(lambda a: np.average(a[1:]))).reset_index().rename(columns={\"launch_gap\": 'launch_gap_mean'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    feature_tmp = pd.pivot_table(feature_data_tmp, index='user_id', values='launch_gap',\n",
+    "                                 aggfunc=(lambda a: np.var(a[1:]))).reset_index().rename(columns={\"launch_gap\": 'launch_gap_var'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    feature_tmp = pd.pivot_table(feature_data_tmp, index='user_id', values='launch_gap',\n",
+    "                                 aggfunc=(lambda a: np.max(a[1:]))).reset_index().rename(columns={\"launch_gap\": 'launch_gap_max'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data = result_data.fillna(0)\n",
+    "\n",
+    "    # 是否一直连续/连续到结束\n",
+    "    result_data['always_launch'] = [1 if i == 1 else 0 for i in result_data['launch_gap_mean']]\n",
+    "    tmp = (result_data['launch_at_lastday'] == 1).replace({True: 1, False: 0})\n",
+    "    result_data['always_launch_atlast'] = tmp * result_data['always_launch']\n",
+    "    del tmp\n",
+    "\n",
+    "    # 登录日期的 方差/峰度/偏度\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='launch_day',\n",
+    "                                 aggfunc=np.var).reset_index().rename(columns={\"launch_day\": 'launch_var'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='launch_day',\n",
+    "                                 aggfunc=pd.Series.kurt).reset_index().rename(columns={\"launch_day\": 'launch_kurt'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='launch_day',\n",
+    "                                 aggfunc=pd.Series.skew).reset_index().rename(columns={\"launch_day\": 'launch_skew'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data = result_data.fillna(0)\n",
+    "    del result_data['register_day']\n",
+    "\n",
+    "    # 保存结果\n",
+    "    result_file_name = 'launch_feature_' + str(feature_num) + '.csv'\n",
+    "    result_data.to_csv('./feature/' + result_file_name, index=None)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### activity相关特征"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "  0%|          | 0/7 [00:00<?, ?it/s]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0 1 18\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 14%|█▍        | 1/7 [00:12<01:12, 12.11s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 1 19\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 29%|██▊       | 2/7 [00:24<01:02, 12.40s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "2 1 20\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 43%|████▎     | 3/7 [00:38<00:51, 12.85s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "3 1 21\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 57%|█████▋    | 4/7 [00:53<00:41, 13.82s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "4 1 22\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 71%|███████▏  | 5/7 [01:10<00:30, 15.18s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "5 1 23\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 86%|████████▌ | 6/7 [01:31<00:16, 16.88s/it]"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "12 1 30\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "100%|██████████| 7/7 [02:01<00:00, 17.38s/it]\n"
+     ]
+    }
+   ],
+   "source": [
+    "up = ups()\n",
+    "down = downs()\n",
+    "\n",
+    "for feature_num in tqdm(features_addday_list()):\n",
+    "    \n",
+    "    # 基础变量定义\n",
+    "    feature_start = up\n",
+    "    feature_end = down + feature_num\n",
+    "    print(feature_num, feature_start, feature_end)\n",
+    "    \n",
+    "    result_data = split_data(register, 'register_day', 1, feature_end).loc[:, ['user_id', 'register_day']]\n",
+    "    feature_data = split_data(activity, 'act_day', feature_start, feature_end)\n",
+    "    \n",
+    "    # 提特征\n",
+    "    # 活动计数\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='act_day',\n",
+    "                                 aggfunc='count').reset_index().rename(columns={\"act_day\": 'act_count'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data = result_data.fillna(0)\n",
+    "\n",
+    "    # 活动的 平均/最大/最小日期 与 注册日期/最大时间 的时间差\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='act_day',\n",
+    "                                 aggfunc='mean').reset_index().rename(columns={\"act_day\": 'act_mean'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data['actmean_red_register'] = result_data['act_mean'] - result_data['register_day']\n",
+    "    result_data['maxday_red_actmean'] = max(result_data['register_day']) - result_data['act_mean']\n",
+    "\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='act_day',\n",
+    "                                 aggfunc=np.max).reset_index().rename(columns={\"act_day\": 'act_max'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data['actmax_red_register'] = result_data['act_max'] - result_data['register_day']\n",
+    "    result_data['maxday_red_actmax'] = max(result_data['register_day']) - result_data['act_max']\n",
+    "\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='act_day',\n",
+    "                                 aggfunc=np.min).reset_index().rename(columns={\"act_day\": 'act_min'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data['actmin_red_register'] = result_data['act_min'] - result_data['register_day']\n",
+    "    result_data['maxday_red_actmin'] = max(result_data['register_day']) - result_data['act_min']\n",
+    "    result_data = result_data.fillna(-1)\n",
+    "\n",
+    "    # 最后一天是否有活动\n",
+    "    result_data['act_at_lastday'] = pd.Series(result_data['act_max'] == max(feature_data['act_day'])).replace({True: 1, False: 0})\n",
+    "\n",
+    "    # 均值/最大/最小 天数处理\n",
+    "    result_data['act_mean'] = max(feature_data['act_day']) - result_data['act_mean']\n",
+    "    result_data['act_max'] = max(feature_data['act_day']) - result_data['act_max']\n",
+    "    result_data['act_min'] = max(feature_data['act_day']) - result_data['act_min']\n",
+    "\n",
+    "    # 观看自己计数\n",
+    "    feature_tmp = pd.pivot_table(feature_data[feature_data['user_id'] == feature_data['author_id']],\n",
+    "                                 index='user_id', values='author_id', aggfunc='count').reset_index().rename(columns={\"author_id\": 'act_self_count'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data = result_data.fillna(0)\n",
+    "\n",
+    "    # 活动日期的 方差/峰度/偏度\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='act_day',\n",
+    "                                 aggfunc=np.var).reset_index().rename(columns={\"act_day\": 'act_var'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='act_day',\n",
+    "                                 aggfunc=pd.Series.kurt).reset_index().rename(columns={\"act_day\": 'act_kurt'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    feature_tmp = pd.pivot_table(feature_data, index='user_id', values='act_day',\n",
+    "                                 aggfunc=pd.Series.skew).reset_index().rename(columns={\"act_day\": 'act_skew'})\n",
+    "    result_data = pd.merge(result_data, feature_tmp, on='user_id', how='left')\n",
+    "    result_data = result_data.fillna(0)\n",
+    "\n",
+    "    # action 的 计数/率\n",
+    "    feature_tmp = feature_data.loc[:, ['user_id', 'action_type', 'act_day']].groupby(['user_id', 'action_type']).count().reset_index().rename(columns={\"act_day\": 'action_count'})\n",
+    "    for i in range(6):\n",
+    "        fea_name = 'action_' + str(i) + '_count'\n",
+    "        action_tmp = feature_tmp[feature_tmp['action_type'] == i].loc[:, ['user_id', 'action_count']].rename(columns={\"action_count\": fea_name})\n",
+    "        result_data = pd.merge(result_data, action_tmp, how='left', on='user_id')\n",
+    "    result_data = result_data.fillna(0)\n",
+    "    result_data['action_all'] = (result_data['action_0_count']+result_data['action_1_count']+\n",
+    "                                 result_data['action_2_count']+result_data['action_3_count']+\n",
+    "                                 result_data['action_4_count']+result_data['action_5_count']).replace(0, 1)\n",
+    "    for i in range(6):\n",
+    "        fea_name = 'action_' + str(i) + '_ratio'\n",
+    "        fea_name_2 = 'action_' + str(i) + '_count'\n",
+    "        result_data[fea_name] = result_data[fea_name_2] / result_data['action_all']\n",
+    "\n",
+    "    # page 的 计数/率\n",
+    "    feature_tmp = feature_data.loc[:, ['user_id', 'page', 'act_day']].groupby(['user_id', 'page']).count().reset_index().rename(columns={\"act_day\": 'page_count'})\n",
+    "    for i in range(5):\n",
+    "        fea_name = 'page_' + str(i) + '_count'\n",
+    "        page_tmp = feature_tmp[feature_tmp['page'] == i].loc[:, ['user_id', 'page_count']].rename(columns={\"page_count\": fea_name})\n",
+    "        result_data = pd.merge(result_data, page_tmp, how='left', on='user_id')\n",
+    "    result_data = result_data.fillna(0)\n",
+    "    result_data['page_all'] = (result_data['page_0_count']+result_data['page_1_count']+\n",
+    "                               result_data['page_2_count']+result_data['page_3_count']+\n",
+    "                               result_data['page_4_count']).replace(0, 1)\n",
+    "    for i in range(5):\n",
+    "        fea_name = 'page_' + str(i) + '_ratio'\n",
+    "        fea_name_2 = 'page_' + str(i) + '_count'\n",
+    "        result_data[fea_name] = result_data[fea_name_2] / result_data['page_all']\n",
+    "\n",
+    "    del result_data['page_all']\n",
+    "    del result_data['action_all']\n",
+    "    del result_data['register_day']\n",
+    "\n",
+    "    # 保存结果\n",
+    "    result_file_name = 'activity_feature_' + str(feature_num) + '.csv'\n",
+    "    result_data.to_csv('./feature/' + result_file_name, index=None)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.8"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}
