@@ -1,0 +1,637 @@
+div.maindiv
+{
+  border-style: none;
+  clear: both;
+  display: block;
+  font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+  font-size: 1em;
+}
+.syl .spel, .spel .syl
+{
+  display: none;
+}
+
+a.small
+{
+  font-size: xx-small;
+  vertical-align: 3px;
+}
+
+.notes .title{
+  font-weight: bold;
+  padding-bottom: 10px;
+  color:#1672b7;
+}
+
+.headword
+{
+  display: inline;
+  padding: 5px;
+}
+
+.headtitle .broad
+{
+  padding-left: 100px;
+  white-space: nowrap;
+}
+
+
+.headword
+{
+  font-size: 24px;
+}
+
+.headtitle h1
+{
+  color: #FF0008;
+  font-size: 32px;
+}
+
+.headtitle.syl{
+  margin-left: -8px;
+}
+
+
+dl.mainlist strong
+{
+  color: blue;
+  
+}
+
+dl.mainlist  dt 
+{
+  float: left;
+  padding-right: 4px;
+  margin-left: 0;
+  padding-left: 0;
+  clear: both;
+  display: block;
+  padding-top:0;
+}
+
+dl.mainlist em
+{
+  display: block;
+}
+
+dl.mainlist  dd dl dt
+{
+  color: black;
+  font-weight: normal;
+}
+
+
+dl.mainlist  dt
+{
+  background-color: transparent;
+}
+
+
+dl.mainlist dd.highlight dl
+{
+  background-image: url(../images/trans_targsn.png);
+  background-repeat: repeat;
+
+}
+
+dl.mainlist dd.highlight dt
+{
+  background-color: transparent;
+}
+dl.mainlist dd.pron_dd *
+{
+  font-family: Tahoma, serif;
+}
+
+dl.mainlist dd.pron_dd img
+, dl.mainlist dd.pron_dd object
+{
+  vertical-align: -6px;
+}
+
+dl.mainlist dd.pron_dd a.sound_play img
+{
+  height: 20px;
+}
+
+dl.mainlist dd.pron_dd a.sound_play
+, dl.mainlist dd.pron_dd a.sound_play img
+{
+  vertical-align: baseline;
+}
+div.maindiv table.maintable
+{
+  margin-top: 1.5em;
+  margin-bottom: 1em;
+  width: 100%;
+}
+
+div.maindiv table.maintable td
+{
+ /* padding-top: 0.9em;*/
+  padding-bottom: 0;
+  vertical-align: baseline;
+}
+
+div.maindiv table.maintable tr td.data div.highlight_frame
+{
+  padding-top: 0.5em;
+  padding-bottom: 0;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+div.maindiv table.maintable tr.highlight td.data div.highlight_frame
+{
+  padding-bottom: 0.5em;
+  background-color: #F8F4E5;
+}
+
+div.maindiv table.maintable tr.highlight td.title div.highlight_frame
+{
+  background-color: #F8F4E5;
+}
+
+div.maindiv table.maintable tr.highlight td.data dl
+{
+  background-color: #F8F4E5;
+}
+
+div.maindiv table.maintable tr.definition td
+{
+  
+}
+
+div.maindiv table.maintable tr.definition div.spanish
+, div.maindiv table.maintable tr.definition em.spanish
+{
+  color: #BF1E2E;
+}
+
+div.maindiv table.maintable tr.definition div.spanish i
+, div.maindiv table.maintable tr.definition em.spanish i
+{
+  font-size: 0.8em;
+}
+
+div.maindiv table.maintable tr.spacer td
+{
+  padding-left: 0;
+  padding-top: 0.5em;
+}
+
+div.maindiv table.maintable td.title a
+{
+  font-weight: bold;
+  color: #000084;
+}
+
+
+div.maindiv table.maintable tr.postitle
+{
+  background-color: #F8F4E5;
+}
+
+
+div.maindiv table.maintable tr.postitle td
+{
+  padding-top: 0;
+  padding-bottom: 0;
+  font-weight: bold;
+  color: #1672b7;
+}
+
+div.maindiv table.maintable tr.postitle td.data a
+{
+  font-weight: bold;
+  color: #1672b7;
+}
+
+div.maindiv table.maintable tr.pronunciation td.data *
+{
+  font-family: Tahoma, serif;
+  vertical-align: 5px;
+}
+div.maindiv table.maintable tr.pronunciation td.data i
+{
+  padding-right: 0.16em;
+  vertical-align: baseline;
+}
+
+div.maindiv table.maintable tr.pronunciation td.data img
+, div.maindiv table.maintable tr.pronunciation td.data object
+{
+  vertical-align: baseline;
+}
+
+div.maindiv table.maintable tr.pronunciation span.delimiter
+{
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+
+div.maindiv table.maintable tr.pronunciation td.title a
+{
+  vertical-align: 5px;
+}
+
+
+div.maindiv table.maintable tr td.data div.thumbnail_bkgnd
+{
+  display: block;
+  border: solid 1px white;
+  float: left; 
+  background-repeat: no-repeat; 
+  background-position: center center; 
+  height: 90px;
+  text-align: center;
+  cursor: pointer;
+}
+
+
+div.maindiv table.maintable td.data dl dt 
+{
+  float: left;
+  padding-right: 0.5em;
+  margin-left: 0;
+  padding-left: 0;
+  clear: both;
+  display: block;
+  padding-top: 0;
+
+}
+div.maindiv table.maintable td.data em
+{
+  display: block;
+}
+
+div.maindiv table.maintable td.data dl
+{
+  padding: 8px;
+  margin-top: 5px;
+  margin-bottom: 0;
+  border-color: #DEE7EB;
+  border-width: 1px;
+  border-style: solid;
+}
+span.stress1    
+{  
+  font-weight: bold;
+  font-style: normal;
+  text-decoration: underline;
+}
+        
+span.stress2
+{  
+  font-weight: bold;
+  font-style: normal;
+  text-decoration: none;
+}
+
+span.stress0
+{  
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+}
+
+span.search_res
+{
+  background-color: #FBFC89;
+}
+div.word_combination
+{
+  padding:4px 4px 0px 4px;
+  margin:4px 0px 0px 16px;
+  border:1px gray solid;
+  border-radius:8px 8px 0px 0px;
+}
+
+div.word_combination div.wc_title
+{
+  font-weight: bold;
+
+  margin-bottom: 1em;
+  color:#1672b7;
+}
+
+div.word_combination div.wc_title.closed
+{
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+div.word_combination div.wc_title a
+{
+  font-weight: normal;
+  padding-left: 2em;
+  font-size: 0.9em;
+}
+
+div.word_combination div.wc_title span.message
+{
+  font-weight: normal;
+}
+
+div.word_combination div.wc_pos
+{
+
+  margin-bottom: 0.4em;
+}
+
+div.word_combination span.wc_pos_title
+{
+  padding-right: 2em;
+  padding-bottom: 4px;
+  display:block;
+  font-weight: bold;
+}
+
+div.word_combination span.wc_headword
+{
+  font-weight: bold;
+  padding-left: 0.3em;
+}
+
+div.word_combination a.wc_help
+{
+  padding-left: 0.2em;
+}
+
+
+div.word_combination div.wc_pos span.a, div.word_combination div.wc_pos a.show_most_freq_link, div.word_combination div.wc_pos.show_all a.show_all_link
+{
+  display: none;
+}
+
+div.word_combination div.wc_pos.show_all span.a, div.word_combination div.wc_pos.show_all a.show_most_freq_link
+{
+  display: inline;
+}
+
+div.word_combination div.wc_pos.show_all span.a
+{
+  color: #006BCE;
+}
+div.wordexplorer
+{
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: #1672b7;
+}
+table.wordexplorer td
+{
+  vertical-align: top;
+}
+
+table.wordexplorer tr td.wephrase
+{
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+
+}
+
+table.wordexplorer tr.closed a.opened, table.wordexplorer tr.opened a.closed
+{
+  display: none;
+}
+
+table.wordexplorer tr.hidden
+{
+  display: none;
+}
+
+table.wordexplorer a.current
+{
+  color:  red;
+  background-color:  #FFFFD9;
+}
+
+div.root_data
+{
+  padding:4px 4px 0px 4px;
+
+  border-radius:8px 8px 0px 0px;
+}
+
+div.root_data div.entry_title
+{
+  font-weight: bold;
+  color:#1672b7;
+}
+div.root_data div.entry_title a
+{
+  font-weight: normal;
+  padding-left: 2em;
+}
+
+div.root_data div.entry_title span.message
+{
+  font-weight: normal;
+  padding-left: 2em;
+}
+
+
+div.root_data div.subtitle
+{
+  margin-top: 0.7em;
+  margin-bottom: 0.1em;
+}
+
+div.root_data div.part
+{
+
+  margin-top: 0.7em;
+}
+
+div.root_data div.spacer
+{
+  font-size: 0.1em;
+  height: 0.1em;
+  line-height: 0.1em;
+}
+
+div.root_data span.wordform
+{
+  font-weight: bold;
+}
+
+div.root_data span.origin
+{
+  padding-left: 6px;
+}
+
+div.root_data span.class
+{
+}
+
+div.root_data span.meaning
+{
+  font-style: italic;
+}
+
+
+div.root_data div.example_block
+, div.root_data div.function_block
+{
+  padding-top: 0.3em;
+
+}
+
+div.root_data div.example_block div.example_list
+, div.root_data div.function_block div.function
+{
+  margin-left: 2em;
+}
+
+/*div.root_data div.example_block div.example_list a
+{
+  color: black;
+}*/
+
+div.root_data dl.relation
+{
+  padding: 0;
+  margin-top: 0.3em;
+  margin-bottom: 0;
+  margin-right: 0;
+
+}
+
+div.root_data dl.relation dt
+{
+  padding: 0;
+  width: auto;
+  font-weight: bold;
+}
+
+div.root_data img
+{
+  border: none;
+}
+
+div.root_data a
+{
+  border: none;
+  text-decoration: none;
+}
+
+div.root_data a:hover
+{
+  text-decoration: underline;
+}
+
+div.root_data a.selected_link
+{
+  text-decoration: underline;
+}
+
+div.root_data div.example_block a.close
+, div.root_data div.example_block a.open
+, div.root_data div.function_block a.close
+, div.root_data div.function_block a.open
+{
+  padding-right: 0.3em;
+}
+
+div.root_data div.example_block.closed div.example_list
+, div.root_data div.example_block.closed a.close
+, div.root_data div.example_block.opened a.open
+
+, div.root_data div.function_block.closed div.function
+, div.root_data div.function_block.closed a.close
+, div.root_data div.function_block.opened a.open
+{
+  display: none;
+}
+
+div.root_data span.hw
+{
+  font-weight: bold;
+  font-style: italic;
+}
+
+div.root_data div.function span.wf
+{
+  font-weight: bold;
+}
+
+div.root_data div.function span.ew
+{
+  text-decoration: underline;
+}
+
+div.root_data div.bottom_links
+{
+  text-align: right;
+  margin-top: 1em;
+  margin-right: 2em;
+}
+div.root_data div.bottom_links a
+{
+  color: #005CB9;
+}
+div.wordbuilder .notetitle 
+{
+  font-style: normal;
+  font-weight: bold;
+  color:#1672b7;
+}
+div.wordbuilder ul li{
+  font-weight: bold;
+}
+div.wordbuilder ul li div.wbpair{
+  font-weight: normal;
+}
+
+div.wordbuilder small
+{
+  color: black;
+  padding-left: 15px;
+  font-size: 1em;
+  font-weight: normal;
+}
+
+
+em{
+  color:#369;
+  font-style: normal
+}
+em.picaudio::after{
+  padding-left: 6px;
+  content:'\274F';
+}
+
+a:-webkit-any-link{
+  text-decoration: none;
+}
+a{
+  color:#186CAD;
+}
+a[title="synonyms and antonyms"]{
+  color:black;
+}
+a[title="inflections"]{
+  padding-left: 3px;
+}
+tr.postitle td.title,tr.definition td.title,tr.related_word td.title{
+  width:6px;
+}
+ul{
+  margin-left: -20px;
+}
+.tagg{
+  font-weight: bold;
+  display:inline-block;
+  padding-right: 8px;
+}
+.maintable dd{
+  -webkit-margin-start: 0px;
+}
+.opened .image{
+  width:15px;
+}
