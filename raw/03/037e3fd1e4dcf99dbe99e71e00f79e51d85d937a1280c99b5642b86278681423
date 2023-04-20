@@ -1,0 +1,78 @@
+<?php
+/**
+ * The template for displaying Search Results pages.
+ *
+ */
+get_header(); ?>
+
+<div class="innerpage_title_wrapper" <?php if($kaya_subheaderbg) { ?> style="background-color:<?php echo $kaya_subheaderbg; ?>" <?php } ?>>
+    <div class="page-title">
+       <h2><?php printf( __( 'Search Results for: %s', 'prominent' ), '<span>' . get_search_query() . '</span>' ); ?></h2>
+    </div>
+
+</div>
+<!-- Start Midcolumn -->	
+<div id="mid-column">
+<!-- Start contentarea -->
+	<div class="two_third">
+	<!-- Start the Loop -->
+		<?php
+			while ( have_posts() ) : the_post(); ?>
+			
+		<div id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+<div class="post_inner_line">
+  <h3 class="entry-title"> <a href="<?php the_permalink(); ?>" title="<?php printf( esc_attr__( 'Permalink to %s', 'prominent' ), the_title_attribute( 'echo=0' ) ); ?>" rel="bookmark">
+            <?php the_title(); ?>
+            </a> </h3> <div class="clear"></div>
+    <?php
+					$timthumb=get_option('timthumb');
+					$thumb = get_post_thumbnail_id();
+					if($thumb) {
+							if($timthumb!="true"){	?>
+    <?php  $imgurl=wp_get_attachment_url( get_post_thumbnail_id() ); ?>
+    <a href="<?php the_permalink(); ?>" > <img  src="<?php echo get_template_directory_uri(); ?>/timthumb.php?src=<?php echo $imgurl; ?>
+										&amp;w=595&amp;h=250&amp;zc=1" alt="<?php the_title(); ?>" class="alignleft" /> </a>
+    <?php
+		}else{
+			$image = vt_resize( $thumb, '', 595, 250, true );  ?>
+ 
+   			 <a href="<?php the_permalink(); ?>" > <img src="<?php echo $image['url']; ?>" width="<?php echo $image['width']; ?>" height="<?php echo $image['height']; ?>" class="alignleft" /> </a>
+    
+        <?php
+			}
+			}
+					?>
+        <div class="clear"></div>
+    	<div class="blog_post_content">
+            <div class="postmetadata"> <span class="postmetadate"><?php echo get_the_date();?></span>
+                <span class="postemetain"> <?php the_category(', ') ?></span>
+                <span class="postmetawriter"><?php the_author_posts_link(); ?></span> 
+                <span class="comments"><?php comments_popup_link(__('Leave a comment', 'prominent' ), __( '1 Comment', 'prominent' ), __( '% Comments', 'prominent' ) ); ?></span> 
+            </div>
+      
+
+        <?php the_excerpt(); ?>
+        <a href="<?php the_permalink(); ?>" class="read-more"> <?php printf( __( 'Read More', 'prominent' )); ?></a> 
+        	</div>
+        </div>
+    </div>
+<!-- #post-## -->
+<div class="clear v-space"></div>
+<?php  
+ $commentsection = get_post_meta( $post->ID, 'commentsection', true );	
+if( $commentsection != "on") {
+comments_template( '', true );
+} ?>
+<?php endwhile; // End the loop.?>
+<?php /* Display navigation to next/previous pages when applicable */ ?>
+<?php echo kaya_pagination(); ?>
+</div>
+<!-- end contentarea -->
+<!-- start sidebar -->
+<div class="one_third_last" >
+ <?php get_sidebar('blog');?>
+</div>
+<!-- end sidebar -->
+</div>
+<!-- end midcolumn -->
+<?php get_footer(); ?>
