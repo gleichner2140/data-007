@@ -1,0 +1,72 @@
+<script src="<?php echo get_template_directory_uri(); ?>/js/jquery.sudoSlider.js"></script>
+<script type="text/javascript">
+		jQuery(document).ready(function(){   
+		var auto = true;
+		var autostopped = false;
+		var sudoSlider = jQuery("#sudo_slider").sudoSlider({
+		numeric:true,
+		prevNext:false,
+		auto: true, 
+		pause:6000, 
+		hoverPause: true	
+		
+	   })
+	   
+		.mouseenter(function() {
+		auto = sudoSlider.getValue('autoAnimation');
+		if (auto)
+			{
+			sudoSlider.stopAuto();
+			}
+		else
+		{
+		autostopped = true;
+		}
+		
+		}).mouseleave(function() {
+     
+	  if (!autostopped)
+		{
+		sudoSlider.startAuto();
+      }
+   });
+});
+
+
+</script>
+<?php $sidebar_layout=get_post_meta($post->ID,'kaya_pagesidebar',true); 
+$sidebarclass="class='one_third_last'";
+$contentcolumn="class='two_third'";
+$leftsidebarclass="class='sidebar'";
+switch($sidebar_layout)
+{
+case 'leftsidebar':
+$sidebarclass="class='one_third'";
+$contentcolumn="class='two_third_last'";
+$leftsidebarclass="class='page-sidebar-left'";
+break;
+case 'rightsidebar':
+$sidebarclass="class='one_third_last'";
+$contentcolumn="class='two_third'";
+break;
+case 'full':
+$contentcolumn="class='fullwidth'";
+break;
+}
+?>
+
+<div id="sudo_slider_wrapper">
+    <div id="sudo_slider">
+        <ul>
+            <?php $nivo_images=get_option('numbernivo_slides');
+				$nivo_images= $nivo_images ?  get_option('numbernivo_slides'): ''; ?>
+            <?php $loop = new WP_Query(array('post_type' => 'slider', 'posts_per_page' => $nivo_images,'order' => 'desc')); ?>
+            <?php while ( $loop->have_posts() ) : $loop->the_post(); ?>
+            <li>
+                <?php global $more; $more = 0; ?>
+                <?php the_content('<span class="read-more">&nbsp;</span>'); ?>
+            </li>
+            <?php  endwhile; ?>
+        </ul>
+    </div>
+</div>
