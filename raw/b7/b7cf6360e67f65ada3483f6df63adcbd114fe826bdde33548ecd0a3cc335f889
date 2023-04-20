@@ -1,0 +1,680 @@
+<?php
+add_action('init','kaya_options');
+
+if (!function_exists('kaya_options')) {
+function kaya_options(){	
+
+// VARIABLES
+
+$themename = get_theme_data(STYLESHEETPATH . '/style.css');
+$themename = $themename['Name'];
+$shortname = "";
+
+// Populate OptionsFramework option in array for use in theme
+global $kaya_options;
+$kaya_options = get_option('kaya_options');
+
+	$porfolio_array =get_terms('portfolio_category','hide_empty=1');
+
+$kaya_portfolio = array();
+
+foreach ($porfolio_array as $portfolio) {
+
+	$kaya_portfolio[$portfolio->slug] = $portfolio->name;
+
+	$portfolio_ids[] = $portfolio->slug;
+
+}
+array_unshift($kaya_portfolio,'All');
+
+$GLOBALS['template_path'] =KAYA_DIRECTORY;
+
+
+
+//Access the WordPress Categories via an Array
+
+$kaya_categories = array();  
+
+$kaya_categories_obj = get_categories('hide_empty=0');
+
+foreach ($kaya_categories_obj as $kaya_cat) {
+
+    $kaya_categories[$kaya_cat->cat_ID] = $kaya_cat->cat_name;}
+
+//$categories_tmp = array_unshift($kaya_categories, "Select a category:");    
+
+       
+
+//Access the WordPress Pages via an Array
+
+$kaya_pages = array();
+
+$kaya_pages_obj = get_pages('sort_column=post_parent,menu_order');    
+
+foreach ($kaya_pages_obj as $kaya_page) {
+
+    $kaya_pages[$kaya_page->ID] = $kaya_page->post_title; }
+
+//$kaya_pages_tmp = array_unshift($kaya_pages, "Select a page:");       
+
+
+
+// Image Alignment radio box
+
+$options_thumb_align = array("alignleft" => "Left","alignright" => "Right","aligncenter" => "Center"); 
+
+
+
+// Image Links to Options
+
+$options_image_link_to = array("image" => "The Image","post" => "The Post"); 
+
+
+
+//Testing 
+
+$options_select = array("one","two","three","four","five"); 
+
+$options_radio = array("one" => "One","two" => "Two","three" => "Three","four" => "Four","five" => "Five"); 
+
+// Background Defaults
+	
+$background_defaults = array('color' => '', 'image' => '', 'repeat' => 'repeat','position' => 'top center','attachment'=>'scroll');
+
+//Stylesheets Reader
+
+$alt_stylesheet_path = KAYA_FILEPATH . '/styles/';
+
+$alt_stylesheets = array();
+
+
+
+if ( is_dir($alt_stylesheet_path) ) {
+
+    if ($alt_stylesheet_dir = opendir($alt_stylesheet_path) ) { 
+
+        while ( ($alt_stylesheet_file = readdir($alt_stylesheet_dir)) !== false ) {
+
+            if(stristr($alt_stylesheet_file, ".css") !== false) {
+
+                $alt_stylesheets[] = $alt_stylesheet_file;
+
+            }
+
+        }    
+
+    }
+
+}
+
+
+
+//More Options
+
+$uploads_arr = wp_upload_dir();
+
+$url =  KAYA_DIRECTORY . '/lib/admin/images/';
+
+$all_uploads_path = $uploads_arr['path'];
+
+$all_uploads = get_option('kaya_uploads');
+
+$other_entries = array("Select a number:","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19");
+
+$body_repeat = array("no-repeat","repeat-x","repeat-y","repeat");
+
+$body_pos = array("top left","top center","top right","center left","center center","center right","bottom left","bottom center","bottom right");
+
+
+
+// Set the Options Array
+
+$options = array();
+
+
+$options[] = array( "name" => "1、常规选项",
+                    "type" => "heading");
+
+					
+
+$options[] =array(	"name" => "顶部Logo设置",
+			"desc" => "上传Logo图像, 例如: logo.png",
+			"id" => $shortname."logo",
+			"std" => "",
+	        "type" => "upload");			
+					
+$options[] =array(	"name" => "Logo顶边距",
+			"desc" => "添加Logo顶边距, 如果Logo大小合适就不填. ",
+			"id" => $shortname."logo_margin_top",
+			"std" => "",
+	        "type" => "textsmall");	
+				
+$options[] =array(	"name" => "Email地址",
+			"desc" => "添加email地址以便从<strong>联系我们</strong>页面接收信息. ",
+			"id" => $shortname."emailid",
+			"std" => "",
+	        "type" => "text");	
+		
+$options[]=	array(
+		"name" => "Timthumb加载选项",
+		"type" => "checkbox",
+		"id" => $shortname."timthumb",
+		"std" => "false",
+		"desc" => "在幻灯片图像或缩略图不显示时，勾选这个按钮，不加载timthumb."
+		);
+
+$options[]=	array(
+		"name" => "布局选项",
+		"type" => "radio",
+		"id" => $shortname."layoutoption",
+		"std" => "fluid",
+		"options"  => array( 'boxed' => "盒子布局", 'fluid' => '流体布局' ),
+		"desc" => ""
+		);
+
+
+
+
+// Frontpage code		
+
+$options[] = array( "name" => "2、首页设置",
+			"type" => "heading"); 
+			
+$options[]=	array(
+		"name" => "首页设置",
+		//"desc" => "Check this box to Disable the 'Frontpapge First Row Single Column widget box'.",
+		"type" => "sortablemulticheck",
+		//"options" =>array("portrait" =>"Portrait Slider","landscape" =>"Landscape Slider"),	
+		"options" => $kaya_pages,
+		"id" => $shortname."homecolumn",
+		"std" => "2"
+		);
+
+		
+								
+// Galley Setting
+
+$options[] = array( "name" => "3、画廊设置 ",
+			"type" => "heading");
+			
+$options[]=array(	"name" => "肖像画风格宽度",
+			"desc" => "输入肖像画风格的宽度  例如: 200px 宽和300px高, 在使用幻灯片时，可以调整宽和高适应页面。",
+			"id" => $shortname."portrait_gallery_width",
+			"std" => "",
+			"type" => "textsmall");
+			
+$options[]=array(	"name" => "肖像画风格长度",
+				"desc" => "输入肖像画风格的长度  例如: 200px 宽和300px高, 在使用幻灯片时，可以调整宽和高适应页面。 ",
+			"id" => $shortname."portrait_gallery_height",
+			"std" => "",
+			"type" => "text");
+			
+			
+$options[]=array(	"name" => "风景画风格宽度",
+			"desc" => "输入风景画风格的宽度  例如: 280px 宽和150px高, 可以调整宽和高适应页面。 ",
+			"id" => $shortname."lnadscape_gallery_width",
+			"std" => "",
+			"type" => "text");
+			
+$options[]=array(	"name" => "风景画风格长度",
+			"desc" => "输入风景画风格的长度  例如: 280px 宽和150px高, 可以调整宽和高适应页面。 ",
+			"id" => $shortname."lnadscape_gallery_height",
+			"std" => "",
+			"type" => "text");
+			
+			
+			
+$options[]=	array(
+		"name" => "是否加载图像标题描述",
+		"type" => "checkbox",
+		"id" => $shortname."image_title",
+		"std" => "false",
+		"desc" => "选定则不加载."
+		);
+ 	   
+
+// Portfolio options	
+
+$options[] = array( "name" => "4、作品集",
+
+			"type" => "heading");  
+ $options[] =array(	"name" => "作品集页继续阅读文本",
+			"desc" => "为作品集页输入继续阅读文本. ",
+			"id" => $shortname."readmore",
+			"std" => "",
+	        "type" => "text");
+
+ $options[] = array( "name" => "列表作品集选项",
+				type => "subheading" );
+				
+ $options[] =array(	"name" => "列表作品集继续阅读文本",
+			"desc" => "为列表作品集输入继续阅读文本. ",
+			"id" => $shortname."sortable_portfolo_readmore",
+			"std" => "",
+	        "type" => "text");
+$options[]=	array(
+		"name" => "不加载作品集描述",
+		"type" => "checkbox",
+		"id" => $shortname."sortable_portfolo_item_desc",
+		"std" => "false",
+		"desc" => "勾选后在分类作品集不加载作品集描述 ."
+		);	
+
+$options[]=	array(
+		"name" => "不显示继续阅读文本",
+		"type" => "checkbox",
+		"id" => $shortname."sortable_portfolo_readmore_disable",
+		"std" => "false",
+		"desc" => "勾选后在分类作品集不显示继续阅读文本 ."
+		);
+		
+	
+
+// Blog options
+
+$options[] = array( "name" => "5、博客页",
+
+			"type" => "heading");   
+
+$options[]=array(	"name" => "博客页",
+
+			"desc" => "选择分类<strong>排除</strong>显示在博客页的文章 ",
+
+			"id" => $shortname."blog_pages",
+
+			"std" => "",
+
+			 "options" => $kaya_categories,
+
+			"type" => "blogmulticheck");
+
+		 
+
+$options[]=	array(
+
+
+
+		"name" => "不加载博客大图像",
+
+
+
+		"type" => "checkbox",
+
+
+
+		"id" => $shortname."blog_bigger_image",
+
+
+
+		"std" => "false",
+
+
+
+		"desc" => "勾选后，在文章页面内不显示大图像."
+
+
+
+		);
+
+$options[] = array( "name" => "6、幻灯片设置",
+
+
+
+
+			"type" => "heading"); 		   
+ $options[] =array(	"name" => "不显示首页幻灯片.", 
+ 			
+
+		"desc" => "勾选不显示.",
+			"id" => $shortname."sliderdisable",
+			"std" => "false",
+			"type" => "checkbox") ;	
+			
+$options[] =array(	"name" => "首页幻灯片背景图像",
+			"desc" => "添加首页幻灯片背景图像, 主题: 请保持图片尺寸超过1400px宽和600px高以便<strong>更美观</strong>",
+			"id" => $shortname."slider_bg_image",
+			"std" => "",
+	        "type" => "upload");
+$options[] = array( "name" =>  "幻灯片背景选项",
+						"desc" => "改变背景颜色.",
+						"id" => "slider_background",
+						"std" => $background_defaults, 
+						"type" => "background");
+
+			
+			$options[] =array(	"name" => "首页幻灯片设置.",
+
+		"desc" => "选择哪一种类型幻灯片显示, <strong>风景风格</strong> 或 <strong>肖像风格</strong> 幻灯片.",
+			"id" => $shortname."sliderlayout",
+			"std" => "",
+			"options" =>array("landscape" =>"1、风景风格", "portrait" =>"2、肖像风格"),			
+			"type" => "select2");
+					
+
+$options[] =array(	"name" => "首页幻灯片设置.",
+
+		"desc" => "选择显示在首页的幻灯片类型, <strong>内容幻灯片</strong> 或 <strong>图像幻灯片</strong>或<strong>单个视频</strong>或<strong>单张图像</strong>.",
+			"id" => $shortname."choosesliderlandscape",
+			"std" => "",
+			"options" =>array( "contentslider" =>"1、内容幻灯片", "imageslider" =>"2、图像幻灯片", "video" =>"3、视频幻灯片",'singleimage' =>'4、单张幻灯片'),			
+			"type" => "select2");
+		$options[] =array(	"name" => "不同类型幻灯片设置.",
+
+		"desc" => "选择显示在首页的幻灯片类型,  <strong>图像幻灯片</strong>或<strong>单个视频</strong>或<strong>单张图像</strong>.",
+			"id" => $shortname."choosesliderpotrait",
+			"std" => "",
+			"options" =>array("imageslider" =>"1、图像幻灯片", "video" =>"2、单个视频",'singleimage' =>'3、单张图像'),			
+			"type" => "select2");
+			
+ $options[] =array(	"name" => "是否加载幻灯片图像描述.",
+
+		"desc" => "选择不加载",
+			"id" => $shortname."slidertitle",
+			"std" => "false",
+			"type" => "checkbox");
+
+$options[]=array(	"name" => "幻灯片张数",
+
+			"desc" => "输入首页幻灯片张数. 例如:4",
+
+			"id" => $shortname."numbernivo_slides",
+
+			"std" => "",
+
+			"type" => "text");					
+						   
+$options[] =array(	"name" => "视频代码.",
+
+"desc" => "添加视频代码，对于风景风格比例960x400；对于肖像风格比例255x400.",
+"id" => $shortname."videourl",
+			"std" => "",
+			"type" => "textarea");	
+					
+$options[] =array(	"name" => "单张图像上传.",
+"desc" => "如果你只想选择单张图像显示而不需要幻灯片，请在这里上传图像,点击<strong>上传图像</strong>按钮.",
+"id" => $shortname."kaya_single_img",
+			"std" => "",
+			"type" => "upload");			
+$options[] =array(	"name" => "图像链接.",
+
+"desc" => "为图像添加一个链接地址如：http://www.dianjin123.com",
+"id" => $shortname."kaya_single_img_linkurl",
+			"std" => "",
+			"type" => "text");			
+
+
+
+			
+
+
+
+//  Custom sidebar code
+
+
+$options[]=array( "name" => "7、自定侧边栏",
+
+	"type" => "heading");
+
+
+		$options[]=array(	"name" => "自定侧边栏",
+
+
+
+			"desc" => "单机 <strong>新增侧边栏</strong> 按钮输入侧边栏名称并点击 <strong>保存</strong>. ",
+
+			"id" => $shortname."customsidebar",
+
+			"std" => "",
+
+			"type" => "customsidebar");	
+
+$options[]=array( "name" => "8、默认皮肤",
+
+	"type" => "heading");
+$url =  get_template_directory_uri() . '/images/skins/';
+$options[] = array( "name" => "主体风格",
+					"desc" => "可以选择以下内嵌的皮肤颜色风格.",
+					"id" => "colorskin",
+					"std" => "",
+					"type" => "images",
+					"options" => array(
+						'../../style.css' => $url . 'default.png',
+						'Orange-Skin.css' => $url . 'Orange.png',
+						'Green-Skin.css' => $url . 'Green.png',
+						'Red-Skin.css' => $url . 'Red.png',
+						'Pink-Skin.css' => $url . 'Pink.png',						
+						'Rhino-Skin.css' => $url . 'Rhino.png',
+						'SummerSky-Skin.css' => $url . 'SummerSky.png',
+						'PaleViolet-Skin.css' => $url . 'PaleViolet.png',
+						'HalfBaked-Skin.css' => $url . 'HalfBaked.png',
+						'Kimberly-Skin.css' => $url . 'Kimberly.png',
+						'Bahia-Skin.css' => $url . 'Bahia.png',
+						'PersianRed-Skin.css' => $url . 'PersianRed.png',
+						'DarkTangerine-Skin.css' => $url . 'DarkTangerine.png',
+						'Cerulean-Skin.css' => $url . 'Cerulean.png',
+						'Blackcurrant-Skin.css' => $url . 'Blackcurrant.png',
+						'Blue-Skin.css' => $url . 'Blue.png',
+						'Crusoe-Skin.css' => $url . 'Crusoe.png',
+						'Eggplant-Skin.css' => $url . 'Eggplant.png',
+						'FaluRed-Skin.css' => $url . 'FaluRed.png',
+						'FreeSpeechBlue-Skin.css' => $url . 'FreeSpeechBlue.png',
+						'GoldenDream-Skin.css' => $url . 'GoldenDream.png',
+						'Karaka-Skin.css' => $url . '	Karaka.png',
+						'LightSeaGreen-Skin.css' => $url . 'LightSeaGreen.png',	
+						'Mandalay-Skin.css' => $url . 'Mandalay.png',
+						'Olive-Skin.css' => $url . 'Olive.png',		
+						'Rainee-Skin.css' => $url . 'Rainee.png',
+						'Rust-Skin.css' => $url . 'Rust.png',
+						'SuvaGrey-Skin.css' => $url . 'SuvaGrey.png',
+						'Timberwolf-Skin.css' => $url . 'Timberwolf.png',
+						'Venus-Skin.css' => $url . 'Venus.png',
+						
+						'Diesel-Skin.css' => $url . 'Diesel.png')
+					
+					);		
+
+
+
+					
+$options[] = array( "name" => "9、自定皮肤",
+				type => "heading" );				
+
+										
+$options[] = array( "name" => "标题和页面主体使用Google字体.",
+				type => "subheading" );
+
+$options[]=array(	"name" => " H1, H2, H3, H4, H5, H6标题使用Google字体",
+				"desc" => "在上面的文本框中输入谷歌字体, 例如: Merienda One, 可从 <a href='http://www.google.com/webfonts#ChoosePlace:select'>得到字体</a>. <br> 
+				如何查找字体名? 点击 ".'<a href="'.get_template_directory_uri().'/images/gogole-font-name.png">这儿</a>' ,
+					"id" => $shortname."google_generaltitlefont",
+					"std" => '',
+					"type" => "text");
+					
+
+														
+$options[]=array(	"name" => "Google主体字体",
+					"desc" => "在上面的文本框中输入谷歌字体" ,
+					"id" => $shortname."google_bodyfont",
+					"std" => '',
+					"type" => "text");	
+
+$options[] = array( "name" => "顶部颜色",
+				type => "subheading" );
+			
+			$options[]=array(	"name" => "背景颜色",
+				"desc" => "为顶部添加颜色, Ex: #333333 ",
+				"id" => $shortname."TopHeaderBG",
+				"std" => "",
+				"type" => "color");
+				
+			$options[]=array(	"name" => "字体颜色",
+				"desc" => "添加顶部字体颜色, Ex: #333333 ",
+				"id" => $shortname."TopHeaderFontColor",
+				"std" => "",
+				"type" => "color");
+
+				
+$options[] = array( "name" => "顶部菜单字体",
+				type => "subheading" );
+				
+		
+		$options[]=array(	"name" => "Google菜单字体",
+					"desc" => "把Google字体粘贴到上面的文本框内" ,
+					"id" => $shortname."google_menufont",
+					"std" => '',
+					"type" => "text");	
+					
+			$options[]=array(	"name" => "菜单字体大小",
+					"desc" => "直接添加数字即可，如12即12px",
+					"id" => $shortname."google_menufont_size",
+					"std" => '12',
+					"type" => "textsmall");
+					
+$options[] = array( "name" => "首页幻灯片背景色",
+				type => "subheading" );
+			
+			$options[]=array(	"name" => "背景色",
+				"desc" => "为首页幻灯片背景添加颜色，格式为16进制如: #333333  ",
+				"id" => $shortname."HomeSliderBG",
+				"std" => "",
+				"type" => "color");
+				
+			$options[]=array(	"name" => "幻灯片标题字体",
+					"desc" => "把Google字体粘贴到上面的文本框内" ,
+					"id" => $shortname."google_slidertitlefont",
+					"std" => '',
+					"type" => "text");	
+
+				
+			$options[]=array(	"name" => "文本颜色",
+				"desc" => "为幻灯片文本选择颜色, 如: #333333 ",
+				"id" => $shortname."HomeSliderFontColor",
+				"std" => "",
+				"type" => "color");	
+				
+			$options[]=array(	"name" => "标题颜色",
+				"desc" => "为幻灯片标题选择颜色, 如: #333333  ",
+				"id" => $shortname."HomeSliderTitleColor",
+				"std" => "",
+				"type" => "color");	
+			
+			$options[]=array(	"name" => "超级链接颜色",
+				"desc" => "为幻灯片链接选择颜色, 如: #333333 ",
+				"id" => $shortname."HomeSliderLinkColor",
+				"std" => "",
+				"type" => "color");
+
+
+$options[] = array( "name" => "页面底部设置",
+				type => "subheading" );
+				
+$options[]=array(	"name" => "页面底部背景色设置",
+			"desc" => "添加 <strong> 页面底部背景色</strong>, 如: #333333 ",
+			"id" => $shortname."BottomSectionBGColor",
+			"std" => "",
+			"type" => "color");
+			
+$options[]=array(	"name" => "页面底部标题颜色",
+			"desc" => "添加 <strong> 页面底部标题颜色</strong>, 如: #333333  ",
+			"id" => $shortname."BottomSectionTitleColor",
+			"std" => "",
+			"type" => "color");
+			
+
+$options[]=array(	"name" => "页面底部文本颜色",
+			"desc" => "添加<strong> 页面底部文本颜色</strong>, 如: #333333  ",
+			"id" => $shortname."BottomSectionFontColor",
+			"std" => "",
+			"type" => "color");
+			
+$options[]=array(	"name" => "页面底部超级链接颜色",
+			"desc" => "添加<strong>页面底部超级链接颜色</strong>, 如: #333333  ",
+			"id" => $shortname."BottomSectionLinkColor",
+			"std" => "",
+			"type" => "color");
+			
+$options[]=array(	"name" => "页面底部鼠标移到其上时显示颜色",
+			"desc" => "添加<strong>页面底部鼠标移到其上时显示的颜色</strong>, Ex: #333333  ",
+			"id" => $shortname."BottomSectionLinkMouseOverColor",
+			"std" => "",
+			"type" => "color");
+
+$options[] = array( "name" => "10、字体设置",
+				type => "heading" );				
+										
+$options[] = array( "name" => "常规字体设置",
+				type => "subheading" );			
+				
+								
+$options[]=array(	"name" => "正文大小",
+					"desc" => "直接添加数字即可，如12即12px",
+					"id" => $shortname."google_bodyfont_size",
+					"std" => '12',
+					"type" => "textsmall");	
+
+$options[]=array(	"name" => "标题H1大小",
+					"desc" => "直接添加数字即可，如24即24px",
+					"id" => $shortname."google_h1font_size",
+					"std" => '24',
+					"type" => "textsmall");	
+								
+$options[]=array(	"name" => "标题H2大小",
+					"desc" => "直接添加数字即可，如22即22px",
+					"id" => $shortname."google_h2font_size",
+					"std" => '22',
+					"type" => "textsmall");
+					
+$options[]=array(	"name" => "标题H3大小",
+					"desc" => "直接添加数字即可，如20即20px",
+					"id" => $shortname."google_h3font_size",
+					"std" => '20',
+					"type" => "textsmall");
+					
+$options[]=array(	"name" => "标题H4大小",
+					"desc" => "直接添加数字即可，如18即18px",
+					"id" => $shortname."google_h4font_size",
+					"std" => '18',
+					"type" => "textsmall");
+														
+$options[]=array(	"name" => "标题H5大小",
+					"desc" => "直接添加数字即可，如16即16px",
+					"id" => $shortname."google_h5font_size",
+					"std" => '16',
+					"type" => "textsmall");
+					
+$options[]=array(	"name" => "标题H6大小",
+					"desc" => "直接添加数字即可，如14即14px",
+					"id" => $shortname."google_h6font_size",
+					"std" => '14',
+					"type" => "textsmall");
+
+
+			
+// Footer section
+			
+$options[] = array( "name" => "11、页脚",
+
+			"type" => "heading"); 	
+
+
+
+	$options[] =	array(
+
+			"type" => "textarea",
+			"name" => "Google分析",
+
+		    "desc" => "把Google分析追踪代码粘贴到这儿",
+		    "id" => $shortname."kaya_google_analytics"); 
+
+						
+			
+			
+
+update_option('kaya_template',$options); 					  
+
+update_option('kaya_themename',$themename);   
+
+update_option('kaya_shortname',$shortname);
+}
+}
+?>
