@@ -1,0 +1,264 @@
+<?php
+function port_portfolio ($atts, $content = null) {
+	extract(shortcode_atts(array(
+	    'id'      => '2',
+        'images'      =>'5',
+         'column'      =>'1',
+         'style'      =>'link',
+	    'title'      =>'on',
+	      'desc'      =>'on',
+		  'sidebar'   => '',
+        
+    ), $atts));
+	
+if($column == '5') { $class="one_fifth"; }  
+ if($column == '4') {$class="one_fourth";}
+if($column == '3') { $class="one_third"; }
+if($column == '2') {$class="one_half"; }
+if($column == '1') { $class="fullwidth"; }
+   if($sidebar=="on")
+   { 
+if($column == '5') { $width="76"; $height="50"; }  
+ if($column == '4') { $width="109"; $height="100"; }
+if($column == '3') { $width="163"; $height="120"; }
+if($column == '2') { $width="271"; $height="220"; }
+if($column == '1') { $width="271"; $height="220"; }
+
+}else{
+
+if($column == '5') { $width="133"; $height="70"; }  
+ if($column == '4') { $width="182"; $height="100"; }
+if($column == '3') { $width="265"; $height="180"; }
+if($column == '2') { $width="431"; $height="215"; }
+if($column == '1') { $width="430"; $height="215"; }
+}
+	global $post, $wpdb;
+if($style == 'posts') { $link_style="posts";}
+if($style == 'prettyphoto') { $link_style="prettyphoto";}
+
+// $out.='<div class="column1"  id="content-column">';
+
+	$paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
+		query_posts(array('post_type' => 'kayaportfolio', 'posts_per_page' => $images, 'taxonomy' => 'portfolio_category', 'term' => $id, 'paged' => $paged));
+	 //$out.='<h2 class="page-title">'.$post_title.'</h2>';
+ 	$out='<div class="portfolio'.$column.' gallery">';
+	$i = 0;
+	 if(have_posts()) : 
+        while (have_posts()): the_post(); 		
+		$readmore = get_option('readmore');
+$readmore= $readmore ? $readmore: 'Read More';	
+		$post_title = get_the_title($post->ID);
+		$i++;
+	$permalink = get_permalink($post->ID);
+	if($link_style == 'posts') { $test=$permalink;}	if($column != "1") {
+	
+	$last = ($i == $column and $column != 1) ? 'last' : '';
+         $out.= '<div  class="'.$class.' '.$last.'">';
+          
+          	 $out.= '<div class="box_outer">';	
+		   $out.='<div class="box_inner">';
+	   
+			$video = get_post_meta( get_the_ID(), 'Video', true );			
+			
+			if($video)
+			{
+			if ( !empty( $video ) ) {
+			
+			
+				$out .= '<a '; 
+if($link_style == "prettyphoto")
+{ $out .='rel="prettyPhoto[mixed]"'; } 
+$out.=' ';
+$out.='href=';
+ if($link_style == "posts")
+{ $out .="'$permalink'";
+}else{ $out .='"' .$video. '"';} 
+$out .='>';
+				 	
+					
+					 $thumb = get_post_thumbnail_id(); 
+					 $timthumb=get_option('timthumb');
+					$thumb = get_post_thumbnail_id();
+					if($timthumb!="true"){ 
+					$imgurl=wp_get_attachment_url( get_post_thumbnail_id() );
+					$out.='<img class=" " '.$class.' '.$title.'  src="'.get_template_directory_uri().'/timthumb.php?src='.$imgurl.'&amp;w='.$width.'&amp;h='.$height.'&amp;zc=1"   />';
+					}else{
+ 					$image = vt_resize( $thumb, '', $width, $height, true );
+					$out.='<img class=" " src="'.$image['url'].'" width="'.$image['width'].'" height="'.$image['height'].'" >';
+					//$out.=get_the_post_thumbnail($page->ID, 'column'.$column.'-img', array('class' => ''));
+					}
+				$out.='</a>';
+			}
+			}else{
+			
+			$thumb_id = get_post_thumbnail_id();
+			
+				if ( !empty( $thumb_id ) ) {
+					$url = wp_get_attachment_image_src( $thumb_id, 'large' );	
+			
+			$out .= '<a '; 
+if($link_style == "prettyphoto")
+{ $out .='rel="prettyPhoto[mixed]"'; } 
+$out.=' ';
+$out.='href=';
+ if($link_style == "posts")
+{ $out .="'$permalink'";
+}else{ $out .='"' .$url[0]. '"';} 
+				
+				$out .='>';	
+					
+					 $thumb = get_post_thumbnail_id(); 
+					 $timthumb=get_option('timthumb');
+					$thumb = get_post_thumbnail_id();
+					if($timthumb!="true"){ 
+					$imgurl=wp_get_attachment_url( get_post_thumbnail_id() );
+					$out.='<img class=" " '.$class.' '.$title.'  src="'.get_template_directory_uri().'/timthumb.php?src='.$imgurl.'&amp;w='.$width.'&amp;h='.$height.'&amp;zc=1"   />';
+					}else{
+ 					$image = vt_resize( $thumb, '', $width, $height, true );
+					$out.='<img  class=" " src="'.$image['url'].'" width="'.$image['width'].'" height="'.$image['height'].'" >';
+					//$out.=get_the_post_thumbnail($page->ID, 'column'.$column.'-img', array('class' => ''));
+					}
+					//$out.=get_the_post_thumbnail($page->ID, 'column'.$column.'-img', array('class' => ''));
+
+					$out.='</a>';
+					//$out.='<br>';
+				}
+			}
+			 $out.='</div>';
+            $out.='</div>';			
+			 $out.='<div class="clear"> </div>';	
+            if($title=="on") {	
+	      if($desc =="on"){ 
+	     $out.='<h4>'.$post_title.'</h4>'; }else{ $out.='<h4>'.$post_title.'</h4>';  } } 
+				global $kaya_content; 
+				 global $more; $more=0;
+            if($desc=="on") { 
+			 $out.= do_shortcode(get_the_content('<div class="readmore">'.$readmore.'<span> </span> </div>'));
+		//	$out.='<br>';
+      // $out.='<a class="readmore" href="'.$permalink.'">'.$readmore.'<span></span></a>';
+	    $out.='</div>';  }
+    	
+	   
+	     if($last=="last" and $desc=="on" ){
+	      $out.='<div class="clear v-space"></div>';
+	     }
+	     else if ($last=="last" and $desc=="off" and $title=="off")
+	     
+	     { $out.='<div class="clear"></div>';  }
+	     
+	       else if ($last=="last" and $title=="on" )
+	    {
+	    	$out.='<div class="v-space-small"></div>';
+			}}
+			
+		if($column== "1")  { 
+		
+		
+			$last = ($i == $column and $column != 1) ? 'last ' : '';
+        	// $out.= '<div  class="column'.$column.' '.$last.'">';
+          	
+             $out.= '<div class="one_half">' ;
+			  $out.= '<div class="box_outer">';	
+		   $out.='<div class="box_inner">';					
+			$video = get_post_meta( get_the_ID(), 'Video', true );			
+		
+			if($video)
+			{
+			if ( !empty( $video ) ) {
+			
+			
+				$out .= '<a '; 
+if($link_style == "prettyphoto")
+{ $out .='rel="prettyPhoto[mixed]"'; } 
+$out.=' ';
+$out.='href=';
+ if($link_style == "posts")
+{ $out .="'$permalink'";
+}else{ $out .='"' .$video. '"';} 
+$out .='>';
+				 	
+					 $thumb = get_post_thumbnail_id(); 
+					 $timthumb=get_option('timthumb');
+					$thumb = get_post_thumbnail_id();
+					if($timthumb!="true"){ 
+					$imgurl=wp_get_attachment_url( get_post_thumbnail_id() );
+					$out.='<img  class=" " '.$class.' '.$title.'  src="'.get_template_directory_uri().'/timthumb.php?src='.$imgurl.'&amp;w='.$width.'&amp;h='.$height.'&amp;zc=1"   />';
+					}else{
+ 					$image = vt_resize( $thumb, '', $width, $height, true );
+					$out.='<img  class=" " src="'.$image['url'].'" width="'.$image['width'].'" height="'.$image['height'].'" >';
+					//$out.=get_the_post_thumbnail($page->ID, 'column'.$column.'-img', array('class' => ''));
+					}
+			
+				$out.='</a>';
+				$out.='<br>';
+			}
+			}else{
+			
+			$thumb_id = get_post_thumbnail_id();
+			
+				if ( !empty( $thumb_id ) ) {
+					$url = wp_get_attachment_image_src( $thumb_id, 'large' );	
+			
+			$out .= '<a '; 
+if($link_style == "prettyphoto")
+{ $out .='rel="prettyPhoto[mixed]"'; } 
+$out.=' ';
+$out.='href=';
+ if($link_style == "posts")
+{ $out .="'$permalink'";
+}else{ $out .='"' .$url[0]. '"';} 
+				
+				$out .='>';	
+					
+					 $thumb = get_post_thumbnail_id(); 
+					 $timthumb=get_option('timthumb');
+					$thumb = get_post_thumbnail_id();
+					if($timthumb!="true"){ 
+					$imgurl=wp_get_attachment_url( get_post_thumbnail_id() );
+					$out.='<img  class=" " '.$class.''.$title.'  src="'.get_template_directory_uri().'/timthumb.php?src='.$imgurl.'&amp;w='.$width.'&amp;h='.$height.'&amp;zc=1"   />';
+					}else{
+ 					$image = vt_resize( $thumb, '', $width, $height, true );
+					$out.='<img class=" " src="'.$image['url'].'" width="'.$image['width'].'" height="'.$image['height'].'" >';
+					//$out.=get_the_post_thumbnail($page->ID, 'column'.$column.'-img', array('class' => ''));
+					}
+					//$out.=get_the_post_thumbnail($page->ID, 'column'.'2'.'-img', array('class' => ''));
+
+					$out.='</a>';
+					//$out.= '</p>' ;
+				}
+			}
+			   $out.='</div>';	
+			 $out.='</div>';         
+			$out.='</div><div class="one_half last">'; 
+			
+             	 if($title=="on") {$out.='<h4>'.$post_title.'</h4>' ; } 
+				
+				 global $more; $more=0;
+             if($desc=="on") { 
+			  
+			 $out.= do_shortcode(get_the_content('<div class="readmore">'.$readmore.'<span></span></div>'));			
+			
+			// $out.='<br>';
+        // $out.='<a class="readmore" href="'.$permalink.'">'.$readmore.'<span></span></a>'; 
+		$out.='</div>';
+			
+		 }
+
+		$out.='<div class="clear v-space"></div>';
+ }			
+			if($i == $column){
+$i = 0;
+}
+         endwhile;  
+		 $out.='</div>'; 
+         else :
+$out.='<h2>'."Sorry but we could not find what you were looking for. But don't give up, keep at it!".'</h2>';
+ endif; 
+
+$out.=kaya_pagination(); 
+
+      // $out.='</div>';
+	  wp_reset_query();
+	   return $out;
+	   
+} add_shortcode('portfolio','port_portfolio'); ?>
