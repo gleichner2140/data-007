@@ -1,0 +1,56 @@
+<?php
+/**
+ * Template Name: Blog
+ *
+ */
+get_header(); ?>
+<?php $sidebar_layout=get_post_meta($post->ID,'kaya_pagesidebar',true); 
+$sidebarclass="class='one_third_last'";
+$contentcolumn="class='two_third'";
+$leftsidebarclass="class='sidebar'";
+switch($sidebar_layout)
+{
+case 'leftsidebar':
+$sidebarclass="class='one_third'";
+$contentcolumn="class='two_third_last'";
+$leftsidebarclass="class='page-sidebar-left'";
+break;
+case 'rightsidebar':
+$sidebarclass="class='one_third_last'";
+$contentcolumn="class='two_third'";
+break;
+case 'full':
+$contentcolumn="class='fullwidth'";
+break;
+}
+?>
+<?php  
+$subheader_disable=get_post_meta($post->ID,'subheader_titleoptions',true);
+$kaya_subheaderbg=get_post_meta($post->ID,'kaya_subheaderbg',true);
+if($subheader_disable!="disable"){ ?>
+
+<div class="innerpage_title_wrapper" <?php if($kaya_subheaderbg) { ?> style="background-color:<?php echo $kaya_subheaderbg; ?>" <?php } ?>>
+    <div class="page-title">
+        <?php custom_pagetitle($post->ID); ?>
+    </div>
+	<?php }else{ echo '<div class="v-space"></div>';} ?>
+</div>
+
+<div id="mid-column">
+<div <?php echo $contentcolumn ?>>
+	<?php
+		$blogpages =@implode(",", get_option('blog_pages'));
+		$paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
+		query_posts("cat=$blogpages.&paged=$paged"); 
+		get_template_part( 'loop', 'blog');
+    ?>
+</div>
+
+<?php if($sidebar_layout !="full") { ?>
+<div <?php echo $sidebarclass;?> >
+    <?php get_sidebar();?>
+</div>
+<div class="clear"></div>
+<?php } ?>
+</div>
+<?php get_footer(); ?>
