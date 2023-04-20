@@ -1,0 +1,103 @@
+<?php
+/**
+ * Template Name: Gallery Portrait
+ */
+get_header(); ?>
+<script>  
+	   $j(document).ready(function() {	 
+	  //  $j(".gallery a[rel^='prettyPhoto']").prettyPhoto({theme:'facebook'});
+	    $j(".kaya_gallery a[rel^='prettyPhoto']").prettyPhoto({theme:'facebook'});
+	 
+});
+</script>
+
+<?php $sidebar_layout=get_post_meta($post->ID,'kaya_pagesidebar',true); 
+$sidebarclass="class='one_third_last'";
+$contentcolumn="class='two_third'";
+$leftsidebarclass="class='sidebar'";
+switch($sidebar_layout)
+{
+case 'leftsidebar':
+$sidebarclass="class='one_third'";
+$contentcolumn="class='two_third_last'";
+$leftsidebarclass="class='page-sidebar-left'";
+break;
+case 'rightsidebar':
+$sidebarclass="class='one_third_last'";
+$contentcolumn="class='two_third'";
+break;
+case 'full':
+$contentcolumn="class='fullwidth'";
+break;
+}
+?>
+<?php 
+
+$subheader_disable=get_post_meta($post->ID,'subheader_titleoptions',true);
+$kaya_subheaderbg=get_post_meta($post->ID,'kaya_subheaderbg',true);
+if($subheader_disable!="disable"){ ?>
+<div class="innerpage_title_wrapper" <?php if($kaya_subheaderbg) { ?> style="background-color:<?php echo $kaya_subheaderbg; ?>" <?php } ?>>
+    <div class="page-title">
+        <?php custom_pagetitle($post->ID); ?>
+    </div>
+	<?php }else{ echo '<div class="v-space"></div>';} ?>
+</div>
+
+<div id="mid-column">
+<div <?php echo $contentcolumn ?>>
+    <?php while ( have_posts() ) : the_post(); ?>
+    <div class="clear"></div>
+    <?php  $portrait_gallery_width=get_option('portrait_gallery_width');
+			$portrait_gallery_height=get_option('portrait_gallery_height');
+			$image_title=get_option('image_title');
+			$portrait_gallery_width=$portrait_gallery_width?$portrait_gallery_width:'200';
+			$portrait_gallery_height=$portrait_gallery_height?$portrait_gallery_height:'300';
+
+    ?>
+    <ul class="kaya_gallery">
+        <?php  $id = intval($id); $images = get_children( array( 'post_parent' => $id, 'post_type' => 'attachment', 'post_mime_type' => 'image', 'orderby' => 'menu_order', 'order' => 'ASC', 'numberposts' => 999 ) );
+	foreach ( $images as $id => $attachment ) {
+		
+		// Attachment page ID
+		$att_page = get_attachment_link($id);
+		// Returns array
+		$img = wp_get_attachment_image_src($id, 'full');
+		$img = $img[0];
+		$thumb = wp_get_attachment_image_src($id, 'full');
+		$thumb = $thumb[0];
+		// Set the image titles
+		$title = $attachment->post_title;
+		// Get the Permalink
+		$permalink = get_permalink();
+		// Set the image captions
+		echo "<li>";
+	$timthumb=get_option('timthumb');
+	if($timthumb!="true"){ ?>
+        <?php  $imgurl=wp_get_attachment_url($id); ?>
+        <a href="<?php echo $imgurl; ?>" rel="prettyPhoto[mixed]"> <img src="<?php echo get_template_directory_uri(); ?>/timthumb.php?src=<?php echo $imgurl; ?>
+										&amp;w=<?php echo $portrait_gallery_width; ?>&amp;h=<?php echo $portrait_gallery_height; ?>&amp;zc=1" alt="<?php echo $title; ?>"  class="img-border" /> </a>
+        <?php
+										}else{
+										 $imgurl=wp_get_attachment_url($id);
+										 $image = vt_resize( $id, '', $portrait_gallery_width, $portrait_gallery_height, true );  ?>
+        <a href="<?php echo $imgurl; ?>" rel="prettyPhoto[mixed]"><img class="img-border"  src="<?php echo $image['url']; ?>" width="<?php echo $image['width']; ?>" height="<?php echo $image['height']; ?>" /></a>
+        <?php
+										}
+										if($image_title!="true"){
+										echo "<p>" .$title ."</p>";
+										}
+										echo "</li>";
+		 }
+					
+					?>
+    </ul>
+    <?php endwhile; // end of the loop. ?>
+</div>
+<?php if($sidebar_layout !="full") { ?>
+<div <?php echo $sidebarclass;?> >
+    <?php get_sidebar('blog');?>
+</div>
+<div class="clear"></div>
+<?php } ?>
+</div>
+<?php get_footer(); ?>
