@@ -1,0 +1,28 @@
+<?php global $width,$height,$class,$sliderlayout;?>
+<?php if($sliderlayout!="portrait")
+{
+echo '<div id="landscape_single">';
+}else{
+echo '<div id="potrait_single">';
+
+}
+?>
+
+<?php
+$timthumb=get_option('timthumb');
+$linkurl=get_option('kaya_single_img_linkurl')? get_option('kaya_single_img_linkurl') :'#';
+$imgurl=get_option('kaya_single_img');
+if($timthumb!="true"){
+	?>				
+ <a href="<?php echo $linkurl; ?>">
+                 <img  src="<?php echo get_template_directory_uri(); ?>/timthumb.php?src=<?php echo $imgurl; ?>&amp;w=<?php echo $width;?>&amp;h=<?php echo $height;?>&amp;zc=1"  alt=""  /> </a> <?php
+			}else{
+			 $image = vt_resize('',$imgurl,$width,$height, true );  ?>
+			 <a href="<?php echo $linkurl; ?>"><img  <?php echo $title; ?> src="<?php echo $image['url']; ?>" width="<?php echo $width;?>" height="<?php echo $height;?>" /></a>
+			<?php
+			}
+?>
+</div>
+
+
+  
