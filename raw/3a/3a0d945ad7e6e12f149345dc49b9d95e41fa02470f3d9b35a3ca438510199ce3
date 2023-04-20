@@ -1,0 +1,115 @@
+<?php
+class Contactinfo extends WP_Widget {
+function Contactinfo() {
+global $themename;
+	parent::WP_Widget(false, $name=$themename.'-联系信息');
+}
+
+/**
+ * Displays category posts widget on blog.
+ */
+function widget($args, $instance) {
+	extract( $args );
+	// If not title, use the name of the category.
+	if( $instance["title"] ) {
+		
+		$title =$instance["title"];
+	}
+	echo $before_widget;
+	// Widget title
+	echo $before_title;
+	echo  $title;
+	echo $after_title;
+	if( $instance["name"] ) {
+		 $name =$instance["name"];
+		 	echo "<span><strong>".$name."</strong></span>";
+	}
+	if( $instance["address"] ) {
+		$address =$instance["address"];
+		echo "<span>".$address."</span>";
+	}
+	if( $instance["phoneno"] ) {
+		
+		$phoneno =$instance["phoneno"];
+		echo "<span>".'<strong>Phone: </strong>'.$phoneno."</span>";
+		
+	}
+	if( $instance["fax"] ) {
+		
+		$fax =$instance["fax"];
+		echo "<span>".'<strong>Phone: </strong>'.$fax."</span>";
+		
+	}
+	
+	if( $instance["email"] ) {
+		
+		$email =$instance["email"];
+		echo "<span>".$email."</span>";
+	}
+			
+	echo $after_widget;
+}
+
+/**
+ * Form processing... Dead simple.
+ */
+function update($new_instance, $old_instance) {
+$instance = $old_instance;
+$instance['title'] = strip_tags( $new_instance['title'] );
+$instance['name'] = strip_tags( $new_instance['name'] );
+$instance['address'] = strip_tags( $new_instance['address'] );
+$instance['email'] = strip_tags( $new_instance['email'] );
+$instance['phoneno'] = strip_tags( $new_instance['phoneno'] );
+$instance['fax'] = strip_tags( $new_instance['fax'] );
+	return $instance;
+}
+
+/**
+ *  form.
+ */
+function form($instance) {
+?>
+
+<p>
+    <label for="<?php echo $this->get_field_id("title"); ?>">
+    <?php _e( 'Title', 'prominent'); ?> :
+    <input class="widefat" id="<?php echo $this->get_field_id("title"); ?>" name="<?php echo $this->get_field_name("title"); ?>" type="text" value="<?php if($instance["title"]) { echo esc_attr($instance["title"]); } ?>" />
+    </label>
+</p>
+<p>
+    <label for="<?php echo $this->get_field_id("name"); ?>">
+    <?php _e( 'Name','prominent'); ?> :
+    <input class="widefat" id="<?php echo $this->get_field_id("name"); ?>" name="<?php echo $this->get_field_name("name"); ?>" type="text" value="<?php if($instance["name"]) { echo esc_attr($instance["name"]); } ?>" />
+    </label>
+</p>
+<p>
+    <label for="<?php echo $this->get_field_id("address"); ?>">
+    <?php _e( 'Address','prominent'); ?>:
+    <textarea cols="25" rows="5" id="<?php echo $this->get_field_id("address"); ?>" name="<?php echo $this->get_field_name("address"); ?>"><?php echo esc_attr($instance["address"]); ?></textarea>
+    </label>
+</p>
+<p>
+    <label for="<?php echo $this->get_field_id("phoneno"); ?>">
+    <?php _e( 'Phone No','prominent'); ?>:
+    <input class="widefat" id="<?php echo $this->get_field_id("phoneno"); ?>" name="<?php echo $this->get_field_name("phoneno"); ?>" type="text" value="<?php echo esc_attr($instance["phoneno"]); ?>" />
+    </label>
+</p>
+<p>
+    <label for="<?php echo $this->get_field_id("fax"); ?>">
+    <?php _e( 'Fax','prominent'); ?> :
+    <input   class="widefat" id="<?php echo $this->get_field_id("fax"); ?>" name="<?php echo $this->get_field_name("fax"); ?>" type="text" value="<?php echo esc_attr($instance["fax"]); ?>" />
+    </label>
+</p>
+<p>
+    <label for="<?php echo $this->get_field_id("email"); ?>">
+    <?php _e( 'Email','prominent' ); ?> :
+    <input class="widefat" id="<?php echo $this->get_field_id("email"); ?>" name="<?php echo $this->get_field_name("email"); ?>" type="text" value="<?php echo esc_attr($instance["email"]); ?>" />
+    </label>
+</p>
+<?php
+
+}
+
+}
+add_action( 'widgets_init', create_function('', 'return register_widget("Contactinfo");') );
+?>
