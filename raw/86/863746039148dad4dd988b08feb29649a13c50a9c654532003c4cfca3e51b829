@@ -1,0 +1,174 @@
+<?php
+function create_portfolio(){
+
+	register_post_type('kayaportfolio', array(
+
+		'labels' => array(
+
+			'name' => __('作品集', 'prominent'),
+
+			'singular_name' => _x('作品集', 'prominent' ),
+
+			'add_new' => __('新增', 'prominent'),
+
+			'add_new_item' => __('新增作品', 'prominent' ),
+
+			'edit_item' => __('编辑作品' , 'prominent'),
+
+			'new_item' => __('新作品' , 'prominent'),
+
+			'view_item' => __('浏览作品' , 'prominent'),
+
+			'search_items' => __('搜索作品', 'prominent' ),
+
+			'not_found' =>  __('没有找到作品' , 'prominent'),
+
+			'not_found_in_trash' => __('垃圾桶内没有作品' , 'prominent'), 
+
+			'parent_item_colon' => '',
+
+		),
+
+		
+		'singular_label' => __('作品集' , 'prominent'),
+
+		'public' => true,
+
+		'exclude_from_search' => false,
+
+		'show_ui' => true,
+
+		'capability_type' => 'post',
+
+		'hierarchical' => false,
+
+		'rewrite' => array( 'with_front' => false ),
+
+		'query_var' => false,
+
+		'menu_icon' => get_stylesheet_directory_uri() . '/lib/images/kaya_portfolios.png',
+
+		'supports' => array('title', 'editor', 'excerpt', 'thumbnail', 'comments','custom-fields','page-attributes')
+
+	));
+
+	//register taxonomy for portfolio
+	register_taxonomy('portfolio_category','kayaportfolio',array(
+
+		'hierarchical' => true,
+
+		'labels' => array(
+
+			'name' => __( '作品集目录', 'taxonomy general name', 'prominent' ),
+
+			'singular_name' => __( '作品集目录', 'prominent'),
+
+			'search_items' =>  __( '搜索目录' , 'prominent'),
+
+			'popular_items' => __( '现有目录' , 'prominent'),
+
+			'all_items' => __( '所有目录' , 'prominent'),
+
+			'parent_item' => null,
+
+			'parent_item_colon' => null,
+
+			'edit_item' => __( '编辑作品目录', 'prominent'), 
+
+			'update_item' => __( '更新作品目录', 'prominent' ),
+
+			'add_new_item' => __( '新增作品目录' , 'prominent'),
+
+			'new_item_name' => __( '作品目录名', 'prominent' ),
+
+			'separate_items_with_commas' => __( '用半角逗号分割作品目录' , 'prominent'),
+
+			'add_or_remove_items' => __( '新增或移出作品目录' , 'prominent'),
+
+			'choose_from_most_used' => __( '从最常用的作品目录中选择' , 'prominent')
+
+		),
+
+		'show_ui' => true,
+
+		'query_var' => true,
+
+		'rewrite' => false,
+
+	));
+
+}
+
+add_action('init','create_portfolio');
+
+function edit_kayaportfolio_columns() {
+
+	$columns = array(
+
+		"cb" => "<input type=\"checkbox\" />",
+
+		"title" => _x('作品集名称', 'prominent'),
+
+		//"thumbnail" => __('Thumbnail', 'prominent'),
+
+		"portfolio_category" => __('目录' , 'prominent'),
+
+		"date" =>  __('日期' , 'prominent')		
+
+	);
+
+	return $columns;
+
+}
+
+add_filter('manage_edit-kayaportfolio_columns', 'edit_kayaportfolio_columns');
+
+function manage_kayaportfolio_columns($column) {
+
+	global $post;
+
+	if ($post->post_type == "kayaportfolio") {
+
+		switch($column){
+
+			case "portfolio_category":
+
+				$sub_portfolio = get_the_terms($post->ID, 'portfolio_category');				
+
+				if (! empty($sub_portfolio)) {
+
+					foreach($sub_portfolio as $sub_cat)
+
+						$return[] = "<a href='edit.php?post_type=kayaportfolio&portfolio_tag=$sub_cat->slug'> " . esc_html(sanitize_term_field('name', $sub_cat->name, $sub_cat->term_id, 'portfolio_tag', 'display')) . "</a>";
+
+					$return = implode(', ', $return);
+
+				} else {
+
+					$sub_cat = get_taxonomy('portfolio_category');
+
+					$return = "No $sub_cat->label";
+
+				}
+
+				echo $return;
+
+				break;
+
+			
+			/* case 'thumbnail':
+
+				echo the_post_thumbnail('thumbnail');
+
+				break;
+
+				*/
+
+		}
+
+	}
+
+}
+
+add_action('manage_posts_custom_column', 'manage_kayaportfolio_columns', 10, 2);
+?>
